@@ -19,9 +19,7 @@ let binStatus = {
 
 let collectionHistory = [];
 
-// ==========================================================
-// DYNAMIC DASHBOARD HTML INJECTION
-// ==========================================================
+// 1. DYNAMIC DASHBOARD HTML INJECTION
 app.get('/', (req, res) => {
     res.send(`
 <!DOCTYPE html>
@@ -172,9 +170,7 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ==========================================
-// REST OF API ENDPOINTS
-// ==========================================
+// 2. ENDPOINT PARA SA ULTRASONIC SENSOR
 app.post('/api/bin/update-levels', (req, res) => {
     const { bioPercentage, nonBioPercentage } = req.body;
     if (bioPercentage !== undefined) binStatus.bioLevel = parseInt(bioPercentage);
@@ -182,13 +178,15 @@ app.post('/api/bin/update-levels', (req, res) => {
     res.json({ success: true, message: "Levels updated!" });
 });
 
+// 3. ENDPOINT PARA SA AUTO AI SEGREGATION
 app.post('/api/bin/auto-segregate', upload.single('imageFile'), (req, res) => {
     const weights = ["Empty", "Biodegradable", "Biodegradable", "Non-Biodegradable", "Non-Biodegradable"];
     const aiResult = weights[Math.floor(Math.random() * weights.length)];
-if (aiResult === "Empty") {
-return res.json({ prediction: "Empty", servoAngle: 0, actionTaken: false });
-}
-const ngayon = new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" });
+    
+    if (aiResult === "Empty") {
+        return res.json({ prediction: "Empty", servoAngle: 0, actionTaken: false });
+    }
+    const ngayon = new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" });
 binStatus.lastItem = aiResult;
 binStatus.lastTime = ngayon;
 if (aiResult === "Biodegradable") {
@@ -206,7 +204,9 @@ if (collectionHistory.length > 50) collectionHistory.pop();
 const angle = aiResult === "Biodegradable" ? 45 : 135;
 res.json({ prediction: aiResult, servoAngle: angle, timestamp: ngayon, actionTaken: true });
 });
+// 4. ENDPOINT PARA SA WEB FETCH REQUEST
 app.get('/api/bin/dashboard-data', (req, res) => {
 res.json({ status: binStatus, history: collectionHistory });
 });
 app.listen(PORT, () => console.log(Server listening on port ${PORT}));
+
